@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan ticket</title>
+</head>
+
+<body>
+
+<h1>🎫 Scan du ticket</h1>
+
+<video id="video" width="300" autoplay></video>
+
+<p id="result">En attente...</p>
+
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<div id="reader" style="width:300px"></div>
+
+
+<script>
+
+let bloque = false;
+
+
+function onScanSuccess(decodedText) {
+
+    // bloque les doubles scans
+    if (bloque) return;
+
+    bloque = true;
+
+
+    fetch("/scan/" + decodedText)
+    .then(response => response.json())
+    .then(data => {
+
+        let result = document.getElementById("result");
+
+
+        if(data.status === "valide"){
+            result.innerHTML =
+            "✅ VALIDÉ : " + data.nom;
+        }
+
+        else if(data.status === "deja_utilise"){
+            result.innerHTML =
+            "❌ DÉJÀ UTILISÉ : " + data.nom;
+        }
+
+        else {
+            result.innerHTML =
+            "❌ Ticket inconnu";
+        }
+
+
+        // attend 3 secondes avant de pouvoir rescanner
+        setTimeout(() => {
+            bloque = false;
+            result.innerHTML = "En attente...";
+        }, 3000);
+
+
+    });
+
+}
+
+
+
+let scanner = new Html5QrcodeScanner(
+    "reader",
+    {
+        fps: 1,
+        qrbox: 250
+    }
+);
+
+
+scanner.render(
+    onScanSuccess
+);
+
+</script>
+
+</body>
+</html>
