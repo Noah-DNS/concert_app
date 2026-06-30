@@ -1,86 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Scan ticket</title>
-</head>
+<h1>Entrée concert</h1>
 
-<body>
-
-<h1>🎫 Scan du ticket</h1>
-
-<video id="video" width="300" autoplay></video>
-
-<p id="result">En attente...</p>
+<input 
+id="ticket"
+placeholder="Numéro ticket"
+autofocus>
 
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<div id="reader" style="width:300px"></div>
+<p id="result"></p>
 
 
 <script>
 
-let bloque = false;
+let input = document.getElementById("ticket");
 
 
-function onScanSuccess(decodedText) {
+input.addEventListener("keydown", function(e){
 
-    // bloque les doubles scans
-    if (bloque) return;
+    if(e.key === "Enter"){
 
-    bloque = true;
-
-
-    fetch("/scan/" + decodedText)
-    .then(response => response.json())
-    .then(data => {
-
-        let result = document.getElementById("result");
+        let numero = input.value;
 
 
-        if(data.status === "valide"){
-            result.innerHTML =
-            "✅ VALIDÉ : " + data.nom;
-        }
-
-        else if(data.status === "deja_utilise"){
-            result.innerHTML =
-            "❌ DÉJÀ UTILISÉ : " + data.nom;
-        }
-
-        else {
-            result.innerHTML =
-            "❌ Ticket inconnu";
-        }
+        fetch("/scan/" + numero)
+        .then(r=>r.json())
+        .then(data=>{
 
 
-        // attend 3 secondes avant de pouvoir rescanner
-        setTimeout(() => {
-            bloque = false;
-            result.innerHTML = "En attente...";
-        }, 3000);
+            if(data.status=="valide"){
+                result.innerHTML =
+                "✅ VALIDÉ : " + data.nom;
+            }
 
 
-    });
+            else if(data.status=="deja_utilise"){
+                result.innerHTML =
+                "❌ DÉJÀ PASSÉ : " + data.nom;
+            }
 
-}
+
+            else{
+                result.innerHTML =
+                "❌ TICKET INCONNU";
+            }
 
 
+            input.value="";
+            input.focus();
 
-let scanner = new Html5QrcodeScanner(
-    "reader",
-    {
-        fps: 1,
-        qrbox: 250
+        });
+
     }
-);
 
-
-scanner.render(
-    onScanSuccess
-);
+});
 
 </script>
-
-</body>
-</html>

@@ -12,6 +12,10 @@ database.add_ticket("1", "Noah")
 database.add_ticket("2", "Lucas")
 database.add_ticket("3", "Axel")
 
+@app.get("/scan/{numero}")
+async def scan(numero: str):
+    return database.validate_ticket(numero)
+
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):

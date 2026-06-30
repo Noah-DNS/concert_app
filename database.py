@@ -1,18 +1,20 @@
 import sqlite3
 
-DB = "tickets.db"
+
+def get_connection():
+    return sqlite3.connect("tickets.db")
 
 
 def init_db():
-    conn = sqlite3.connect(DB)
-
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS tickets(
-        id TEXT PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero TEXT UNIQUE,
         nom TEXT,
-        utilise INTEGER DEFAULT 0
+        statut TEXT DEFAULT 'non_venu'
     )
     """)
 
@@ -20,43 +22,57 @@ def init_db():
     conn.close()
 
 
-def get_ticket(id):
-    conn = sqlite3.connect(DB)
+
+def add_ticket(numero, nom):
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT * FROM tickets WHERE id=?",
-        (id,)
+        "INSERT OR REPLACE INTO tickets(numero, nom) VALUES (?, ?)",
+        (numero, nom)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+
+def validate_ticket(numero):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT nom, statut FROM tickets WHERE numero=?",
+        (numero,)
     )
 
     ticket = cur.fetchone()
 
-    conn.close()
+    if ticket is None:
+        conn.close()
+        return {"status":"inconnu"}
 
-    return ticket
+    nom, statut = ticket
 
 
-def add_ticket(id, nom=""):
-    conn = sqlite3.connect(DB)
-    cur = conn.cursor()
+    if statut == "utilise":
+        conn.close()
+        return {
+            "status":"deja_utilise",
+            "nom":nom
+        }
+
 
     cur.execute(
-        "INSERT OR IGNORE INTO tickets(id, nom) VALUES (?,?)",
-        (id, nom)
+        "UPDATE tickets SET statut='utilise' WHERE numero=?",
+        (numero,)
     )
 
     conn.commit()
     conn.close()
 
 
-def validate_ticket(id):
-    conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-
-    cur.execute(
-        "UPDATE tickets SET utilise=1 WHERE id=?",
-        (id,)
-    )
-
-    conn.commit()
-    conn.close()
+    return {
+        "status":"valide",
+        "nom":nom
+    }
