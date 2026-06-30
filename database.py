@@ -9,8 +9,10 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
+    cur.execute("DROP TABLE IF EXISTS tickets")
+
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS tickets (
+    CREATE TABLE tickets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         numero TEXT UNIQUE,
         nom TEXT,
