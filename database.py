@@ -13,7 +13,11 @@ def init_db():
     cur = conn.cursor()
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS tickets (
+    DROP TABLE IF EXISTS tickets
+    """)
+
+    cur.execute("""
+    CREATE TABLE tickets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         numero TEXT UNIQUE,
         nom TEXT,
